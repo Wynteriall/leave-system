@@ -26,7 +26,7 @@ The final technologies and features will be decided through research and documen
 3. Clone it on your computer:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Wynteriall/leave-system
    cd leave-system
    ```
 
