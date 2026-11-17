@@ -1,21 +1,61 @@
 # Employee Leave Management System
 
-An educational college final project for designing and researching an employee leave management system.
+An educational college final project for designing and researching a secure employee leave management system.
 
 This project is **not intended to be production software for companies**. Its purpose is to help the group learn about system design, collaboration, and security features that could be useful in a leave-management application.
 
 ## Project overview
 
-The system is still being researched and designed. Possible areas include:
+The system allows employees to request leave electronically, managers to review and decide requests,
+and administrators to manage the system's rules, users, balances, reports, and security trail.
 
-- Employee leave requests
-- Manager approval and rejection
-- Leave balances and history
-- Administrative management
-- Notifications and reporting
-- Authentication, authorization, validation, and audit history
+The approved design is a local-development Laravel 13 application using PHP 8.3+, MySQL 8, and
+server-rendered Blade views. The implementation is separate from the research and specification work
+and will be built from the approved specification.
 
-The final technologies and features will be decided through research and documented in the repository.
+### Roles
+
+- **Employee** — views balances and personal records, submits and cancels pending requests, tracks
+  decisions, uploads required supporting documents, and edits permitted profile fields.
+- **Manager** — approves or rejects requests from direct reports, with approval context and mandatory
+  rejection reasons. Managers also use the employee leave features for their own requests.
+- **Administrator** — manages users, managers, leave types, entitlements, reports, audit logs, and
+  exceptional overrides or cancellations. Administrators do not silently replace the normal approval
+  workflow.
+
+The professor's reference uses the word "Administrator" for both approval and system-management
+responsibilities. This project separates those responsibilities between Manager and Administrator as
+a least-privilege design.
+
+### Main capabilities
+
+- Leave requests with leave type, date range, reason, server-computed working days, balance checks,
+  overlap checks, and status history.
+- Yearly leave entitlements with no carry-over and administrator balance adjustments.
+- Manager approval queue with approval or rejection notes and decision context.
+- In-app notifications for submissions, decisions, reminders, and administrative actions.
+- Secure supporting-document uploads for leave types that require them: PDF/JPEG/PNG, MIME and
+  extension validation, 5 MB limit, non-public storage, and policy-controlled downloads.
+- Administrator request archive, dashboard counts, leave-balance reports, and leave-transaction
+  reports with CSV export and print-ready HTML views.
+- Limited employee profile editing for phone and address; identity and reporting fields remain
+  administrator-managed.
+- Authentication, role-based access control, ownership checks, input validation, CSRF protection,
+  SQL-injection prevention, secure sessions, password hashing, and append-only audit logging.
+
+## Scope decisions
+
+The following are intentionally out of scope for version 1:
+
+- Multi-level approval, delegation, and self-approval.
+- Leave accrual plans, carry-over, half-days, and hourly leave.
+- Payroll, timesheet, calendar integrations, email/SMS/push delivery, and native mobile apps.
+- SSO/MFA user interface, impersonation, internationalisation, dark mode, and keyboard shortcuts.
+- Admin-managed holiday storage; version 1 uses a fixed application holiday list.
+
+Supporting documents were originally planned as a reference field. The decision was reopened because
+the professor's reference explicitly requires uploads and validation. The current decision is recorded
+in [ADR-0007](docs/adr/0007-attachment-storage.md).
 
 ## Getting started
 
@@ -41,7 +81,17 @@ git switch main
 git pull origin main
 ```
 
-Follow the setup instructions for the technologies selected by the project. These instructions will be added or updated as the research progresses.
+The application implementation has not yet been added to this repository. When implementation begins,
+the expected local environment is:
+
+- PHP 8.3+ with required extensions
+- Composer
+- MySQL 8
+- Node 20+ only if frontend assets are customised
+- Optional Laravel Sail for a pinned Docker environment
+
+The approved implementation plan is documented in
+[`docs/spec/spec.md`](docs/spec/spec.md), including the expected Laravel setup and seed data.
 
 ## How to contribute
 
@@ -84,7 +134,21 @@ Before starting new research:
 - Record sources, findings, assumptions, and unresolved questions.
 - Explain how the research affects the system or a future decision.
 
-Important project terminology belongs in [`GLOSSARY.md`](GLOSSARY.md) when that file is created. Significant technical decisions belong in [`docs/adr/`](docs/adr/) when applicable. See [`docs/agents/domain.md`](docs/agents/domain.md) for the documentation structure.
+Important project terminology belongs in [`GLOSSARY.md`](GLOSSARY.md). Significant technical
+decisions belong in [`docs/adr/`](docs/adr/). The complete approved design is in
+[`docs/spec/spec.md`](docs/spec/spec.md), and the professor's reference is retained in
+[`docs/employee_leave_application_system.md`](docs/employee_leave_application_system.md).
+
+Relevant documentation:
+
+- [`docs/spec/spec.md`](docs/spec/spec.md) — integrated project specification and acceptance criteria.
+- [`research/feature-modules.md`](research/feature-modules.md) — feature research and rationale.
+- [`research/security-measures.md`](research/security-measures.md) — security research and demo ideas.
+- [`research/data-model.md`](research/data-model.md) — database research.
+- [`research/tech-stack.md`](research/tech-stack.md) — technology and architecture research.
+- [`docs/adr/`](docs/adr/) — accepted architecture and domain decisions.
+- [GitHub issue #11](https://github.com/Wynteriall/leave-system/issues/11) — professor-spec alignment
+  decisions.
 
 ## Working with AI agents
 

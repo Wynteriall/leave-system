@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Leave Management System — Progress Report</title>
+  <style>
+    :root {
+      --ink: #1d2730;
+      --muted: #59656d;
+      --blue: #1e4d68;
+      --blue-light: #edf4f6;
+      --green: #2e6856;
+      --green-light: #edf5ef;
+      --cream: #f5f1e9;
+      --line: #d8d5ce;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: #e8e5df; font-family: Georgia, "Times New Roman", serif; line-height: 1.55; }
+    .document { max-width: 950px; margin: 0 auto; background: #fffdfa; box-shadow: 0 14px 40px rgba(30, 40, 45, .10); }
+    .cover { min-height: 510px; padding: 72px 10% 55px; display: flex; flex-direction: column; justify-content: space-between; color: white; background: linear-gradient(135deg, #173b53, #255b70 70%, #3e7d72); }
+    .label, .kicker { font: 700 11px/1.2 Arial, sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+    .label { color: #c8dfdc; }
+    h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.1; }
+    h1 { max-width: 650px; margin-top: 25px; font-size: clamp(44px, 7vw, 72px); letter-spacing: -.05em; }
+    .cover-intro { max-width: 610px; margin: 25px 0 0; color: #e4efed; font-size: 21px; }
+    .status { max-width: 650px; padding: 19px 22px; border-left: 4px solid #d5a24c; background: rgba(255,255,255,.10); font-size: 19px; }
+    .status strong { display: block; margin-bottom: 5px; font: 700 11px Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #f2d69f; }
+    main { padding: 0 10% 70px; }
+    section { padding-top: 68px; }
+    .kicker { margin-bottom: 13px; color: var(--green); }
+    h2 { max-width: 700px; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.035em; }
+    h3 { font-size: 23px; }
+    .lead { max-width: 700px; margin: 18px 0 0; color: var(--muted); font-size: 18px; }
+    .divider { height: 1px; margin-top: 68px; background: var(--line); }
+
+    .workflow { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 34px; border: 1px solid #cbd9dc; border-radius: 10px; overflow: hidden; }
+    .step { min-height: 130px; padding: 21px 17px; background: var(--blue-light); border-right: 1px solid #cbd9dc; }
+    .step:last-child { border-right: 0; }
+    .step-number { color: var(--green); font: 700 12px Arial, sans-serif; }
+    .step strong { display: block; margin-top: 12px; color: var(--blue); font-size: 18px; line-height: 1.2; }
+    .step span { display: block; margin-top: 7px; color: var(--muted); font: 13px/1.35 Arial, sans-serif; }
+
+    .progress-points { margin-top: 34px; }
+    .progress-point { display: grid; grid-template-columns: 58px 1fr; gap: 20px; padding: 25px 0; border-top: 1px solid var(--line); }
+    .progress-point:last-child { border-bottom: 1px solid var(--line); }
+    .point-number { display: flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--green); font: 700 16px Arial, sans-serif; }
+    .progress-point p { max-width: 680px; margin: 9px 0 0; color: var(--muted); }
+
+    table { width: 100%; margin-top: 28px; border-collapse: collapse; font-size: 16px; }
+    th { padding: 12px 15px; color: white; background: var(--blue); text-align: left; font: 700 12px Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+    td { padding: 15px; vertical-align: top; border-bottom: 1px solid var(--line); }
+    tbody tr:nth-child(even) { background: #faf8f3; }
+    td:first-child { width: 27%; font-weight: 700; }
+
+    .privacy { margin-top: 30px; padding: 24px 27px; background: var(--green-light); border-left: 4px solid var(--green); }
+    .privacy p { margin: 10px 0 0; color: #496258; }
+    .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+    .evidence-grid h3 { margin-bottom: 13px; font-size: 20px; }
+    ul { margin: 0; padding-left: 22px; color: var(--muted); }
+    li + li { margin-top: 8px; }
+    .not-yet { padding: 23px 25px; background: var(--cream); }
+    .not-yet ul { color: var(--muted); }
+
+    .milestone { margin-top: 32px; padding: 29px; color: white; background: var(--blue); border-radius: 10px; }
+    .milestone h3 { color: white; }
+    .milestone p { max-width: 700px; margin: 12px 0 0; color: #d8e7e8; font-size: 18px; }
+    .build-order { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 24px; }
+    .build-item { padding: 15px; border: 1px solid rgba(255,255,255,.25); border-radius: 7px; }
+    .build-item b { display: block; font: 700 12px Arial, sans-serif; color: #b6d7d4; text-transform: uppercase; letter-spacing: .07em; }
+    .build-item span { display: block; margin-top: 7px; font-size: 15px; }
+    .closing { margin-top: 37px; font-size: 22px; line-height: 1.35; }
+    footer { padding: 26px 10%; border-top: 1px solid var(--line); color: var(--muted); font: 12px Arial, sans-serif; }
+    footer strong { color: var(--ink); }
+
+    @media (max-width: 700px) {
+      .cover { min-height: 540px; padding: 52px 7% 42px; }
+      main { padding-left: 7%; padding-right: 7%; }
+      .workflow, .evidence-grid, .build-order { grid-template-columns: 1fr 1fr; }
+      .step:nth-child(2) { border-right: 0; }
+      .step:nth-child(-n+2) { border-bottom: 1px solid #cbd9dc; }
+    }
+    @media (max-width: 480px) {
+      .workflow, .evidence-grid, .build-order { grid-template-columns: 1fr; }
+      .step, .step:nth-child(2) { border-right: 0; border-bottom: 1px solid #cbd9dc; }
+      .step:last-child { border-bottom: 0; }
+      .progress-point { grid-template-columns: 45px 1fr; gap: 13px; }
+      table { font-size: 14px; }
+      th, td { padding: 10px; }
+    }
+    @media print {
+      body { background: white; }
+      .document { max-width: none; box-shadow: none; }
+      .cover { min-height: 430px; page-break-after: always; }
+      section { page-break-inside: avoid; }
+      .milestone, .not-yet, .privacy, .workflow { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <article class="document">
+    <header class="cover">
+      <div>
+        <div class="label">Progress report · November 2026</div>
+        <h1>Employee Leave Management System</h1>
+        <p class="cover-intro">From a general project idea to a clear plan for a working system.</p>
+      </div>
+      <div class="status"><strong>Current status</strong>We have completed the planning and design foundation. We are ready to begin building the first working version.</div>
+    </header>
+
+    <main>
+      <section>
+        <div class="kicker">01 · Context</div>
+        <h2>We first needed to understand the process before building it.</h2>
+        <p class="lead">The project aims to replace paper-based leave applications with a system where employees can submit requests, managers can review them, and administrators can manage the records and rules.</p>
+        <p class="lead">Before creating screens, we focused on one practical question: how should a leave request move through the system, and how can we make sure that only the right people can view or change it?</p>
+        <div class="workflow" aria-label="Leave request workflow">
+          <div class="step"><div class="step-number">01</div><strong>Employee submits</strong><span>Chooses the leave type, dates, and reason.</span></div>
+          <div class="step"><div class="step-number">02</div><strong>Request is checked</strong><span>Dates, balance, and conflicts are considered.</span></div>
+          <div class="step"><div class="step-number">03</div><strong>Manager reviews</strong><span>The request is approved or rejected with a decision.</span></div>
+          <div class="step"><div class="step-number">04</div><strong>Employee sees result</strong><span>The status is updated and kept in the record.</span></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="kicker">02 · Progress</div>
+        <h2>We clarified the parts that were still open.</h2>
+        <div class="progress-points">
+          <div class="progress-point"><div class="point-number">1</div><div><h3>Responsibility is clearer.</h3><p>We added a manager role so requests can be reviewed by the person responsible for the employee’s team. The administrator manages the system and handles exceptional cases.</p></div></div>
+          <div class="progress-point"><div class="point-number">2</div><div><h3>The complete request journey is planned.</h3><p>We considered what happens before submission, during review, after approval or rejection, and when a request needs to be cancelled or corrected.</p></div></div>
+          <div class="progress-point"><div class="point-number">3</div><div><h3>Privacy and accountability are part of the design.</h3><p>Employees should only see their own information. Managers should see what they need to make a decision. Approvals, rejections, and important changes should remain visible.</p></div></div>
+          <div class="progress-point"><div class="point-number">4</div><div><h3>The build direction is agreed.</h3><p>We chose a practical web application approach that matches our experience and keeps the project manageable to build and demonstrate.</p></div></div>
+        </div>
+        <table>
+          <thead><tr><th>Role</th><th>Main responsibility</th></tr></thead>
+          <tbody>
+            <tr><td>Employee</td><td>Submit and track personal leave requests.</td></tr>
+            <tr><td>Manager</td><td>Review and decide on requests from the team.</td></tr>
+            <tr><td>Administrator</td><td>Manage users, leave rules, records, and exceptions.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="kicker">03 · Evidence</div>
+        <h2>Our progress is the foundation for implementation.</h2>
+        <p class="lead">The working application has not been built yet. The completed work at this stage gives the team a shared understanding of what to build, why it matters, and what should happen first.</p>
+        <div class="evidence-grid">
+          <div>
+            <h3>Completed during this phase</h3>
+            <ul>
+              <li>User responsibilities have been agreed.</li>
+              <li>The complete request and decision process has been mapped.</li>
+              <li>Privacy and security concerns have been identified.</li>
+              <li>The information needed for leave records has been organized.</li>
+              <li>The technology direction and build order have been chosen.</li>
+            </ul>
+          </div>
+          <div class="not-yet">
+            <h3>Not completed yet</h3>
+            <ul>
+              <li>The working application.</li>
+              <li>Final screens and user testing.</li>
+              <li>The end-to-end demonstration.</li>
+              <li>Reports and supporting features.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="privacy"><h3>Why this progress matters</h3><p>Starting with a shared process reduces the risk of building disconnected screens or making security decisions too late. The next phase can focus on implementation instead of changing the project direction.</p></div>
+      </section>
+
+      <section>
+        <div class="kicker">04 · Next steps</div>
+        <h2>Our next milestone is one complete working journey.</h2>
+        <div class="milestone">
+          <h3>Employee submits → Manager reviews → Employee sees the decision</h3>
+          <p>We will build this basic process first. It will give us a working foundation that can be expanded with administration, history, notifications, reports, and security demonstrations.</p>
+          <div class="build-order">
+            <div class="build-item"><b>First</b><span>Set up the application and database.</span></div>
+            <div class="build-item"><b>Then</b><span>Add accounts, leave types, balances, and requests.</span></div>
+            <div class="build-item"><b>Next</b><span>Add manager approval and employee status tracking.</span></div>
+            <div class="build-item"><b>After</b><span>Add history, notifications, reports, and demonstrations.</span></div>
+          </div>
+        </div>
+        <p class="closing">The project has moved from a general concept to a clear implementation plan. Our next progress report should show that plan working in the application.</p>
+      </section>
+    </main>
+    <footer><strong>Employee Leave Management System</strong> · Progress report · Planning and design phase</footer>
+  </article>
+</body>
+</html>

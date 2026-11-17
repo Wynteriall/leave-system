@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee Leave System — Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #1d2530;
+    font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+    background: #24425c;
+    color: #fff;
+  }
+  .brand { font-weight: 600; font-size: 15px; }
+  .notice { font-size: 12px; color: #b9c9d6; }
+  .spacer { margin-left: auto; }
+  .switcher { font-size: 13px; color: #cdd9e2; }
+  .switcher select {
+    margin-left: 6px;
+    font: 13px "Segoe UI", system-ui, sans-serif;
+    padding: 4px 6px;
+    border: 1px solid #8fa5b5;
+    border-radius: 2px;
+    background: #fff;
+    color: #1d2530;
+  }
+
+  /* Layout */
+  .layout { display: flex; min-height: calc(100vh - 45px); }
+  .sidenav {
+    width: 190px;
+    flex: 0 0 190px;
+    border-right: 1px solid #dde1e5;
+    background: #f7f8f9;
+    padding: 14px 0;
+  }
+  .sidenav a {
+    display: block;
+    padding: 8px 18px;
+    color: #33404c;
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+  }
+  .sidenav a:hover { background: #eef0f2; }
+  .sidenav a.active {
+    background: #e8eef3;
+    border-left-color: #24425c;
+    font-weight: 600;
+    color: #1d2530;
+  }
+  .content { flex: 1; padding: 26px 34px 60px; max-width: 900px; }
+
+  h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  .sub { margin: 3px 0 20px; color: #66707a; font-size: 13px; }
+  h2 { margin: 26px 0 8px; font-size: 15px; font-weight: 600; }
+
+  /* Tables */
+  table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.data th {
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #66707a;
+    border-bottom: 1px solid #c9ced3;
+    padding: 7px 10px 7px 0;
+  }
+  table.data td { border-bottom: 1px solid #e6e9ec; padding: 9px 10px 9px 0; vertical-align: top; }
+  table.data td.num, table.data th.num { text-align: right; padding-right: 0; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover { background: #f5f7f8; }
+
+  /* Status as plain text */
+  .st-pending   { color: #8a6100; }
+  .st-approved  { color: #1d6b40; font-weight: 600; }
+  .st-rejected  { color: #a03030; font-weight: 600; }
+  .st-cancelled { color: #66707a; }
+  .st-inactive  { color: #a03030; }
+  .st-active    { color: #1d6b40; }
+
+  /* Buttons */
+  .btn {
+    font: 14px "Segoe UI", system-ui, sans-serif;
+    padding: 7px 14px;
+    border: 1px solid #b6bdc4;
+    border-radius: 2px;
+    background: #fff;
+    color: #1d2530;
+    cursor: pointer;
+  }
+  .btn:hover { background: #f2f4f5; }
+  .btn.primary { background: #24425c; border-color: #24425c; color: #fff; }
+  .btn.primary:hover { background: #2d5271; }
+  .btn.danger { color: #a03030; }
+  .btn.small { padding: 3px 10px; font-size: 13px; }
+  .btnrow { margin-top: 18px; display: flex; gap: 10px; }
+
+  /* Forms */
+  .field { margin-bottom: 14px; max-width: 420px; }
+  .field label { display: block; font-size: 13px; margin-bottom: 4px; color: #33404c; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    font: 14px "Segoe UI", system-ui, sans-serif;
+    padding: 6px 8px;
+    border: 1px solid #b6bdc4;
+    border-radius: 2px;
+    background: #fff;
+    color: #1d2530;
+  }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .formrow { display: flex; gap: 14px; }
+  .formrow .field { flex: 1; }
+
+  /* Summary / detail boxes */
+  .box { border: 1px solid #d4d8dc; border-radius: 2px; padding: 12px 16px; margin-top: 16px; max-width: 520px; }
+  .box h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #33404c; text-transform: uppercase; letter-spacing: .04em; }
+  .box .row { display: flex; justify-content: space-between; gap: 16px; padding: 3px 0; font-size: 14px; }
+  .box .row span:first-child { color: #66707a; }
+  .box .quote { margin: 4px 0 0; padding: 6px 10px; border-left: 3px solid #c9ced3; color: #33404c; font-style: italic; }
+  .flash {
+    max-width: 520px;
+    margin-bottom: 18px;
+    padding: 9px 14px;
+    border: 1px solid #bcd4c2;
+    background: #eef6f0;
+    color: #1d5c38;
+    font-size: 14px;
+  }
+  .errors { margin: 10px 0 0; padding: 0 0 0 18px; color: #a03030; font-size: 13.5px; }
+  .errors li { margin-top: 3px; }
+  .fielderror { color: #a03030; font-size: 13px; margin-top: 4px; }
+  .muted { color: #66707a; }
+  .small { font-size: 13px; }
+  .viewlink { font-size: 13px; color: #24425c; background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  /* Activity list */
+  ul.activity { list-style: none; margin: 0; padding: 0; max-width: 620px; }
+  ul.activity li { padding: 8px 0; border-bottom: 1px solid #e6e9ec; font-size: 14px; }
+  ul.activity .when { color: #66707a; font-size: 12.5px; margin-right: 10px; }
+
+  @media (max-width: 700px) {
+    .layout { flex-direction: column; }
+    .sidenav { width: 100%; flex: none; display: flex; overflow-x: auto; padding: 0; border-right: 0; border-bottom: 1px solid #dde1e5; }
+    .sidenav a { border-left: 0; border-bottom: 3px solid transparent; white-space: nowrap; }
+    .sidenav a.active { border-bottom-color: #24425c; }
+    .content { padding: 20px 16px 50px; }
+    .formrow { flex-direction: column; gap: 0; }
+    .topbar { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">Employee Leave System</span>
+  <span class="notice">Prototype — sample data only. No real login or database.</span>
+  <span class="spacer"></span>
+  <label class="switcher">Viewing as <select id="userSelect" onchange="switchUser(this.value)"></select></label>
+  <button class="btn small" style="background:transparent;color:#fff;border-color:#5d7a92" onclick="resetDemo()">Reset demo</button>
+</header>
+
+<div class="layout">
+  <nav class="sidenav" id="nav"></nav>
+  <main class="content" id="content"></main>
+</div>
+
+<script>
+/* ---------- date helpers ---------- */
+function pad(n){ return String(n).padStart(2,'0'); }
+function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function parseISO(s){ const p=s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function fmtDate(s){ return parseISO(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtRange(a,b){ return a===b ? fmtDate(a) : fmtDate(a)+' \u2013 '+fmtDate(b); }
+function workingDays(a,b){
+  let n=0; let d=parseISO(a); const end=parseISO(b);
+  while(d<=end){ const w=d.getDay(); if(w!==0 && w!==6) n++; d=addDays(d,1); }
+  return n;
+}
+function today(){ return toISO(new Date()); }
+
+/* ---------- demo data ---------- */
+let state;
+function seed(){
+  const t = n => toISO(addDays(new Date(), n));
+  state = {
+    currentUser:'maria', view:'dashboard', flash:null, detailId:null, reviewId:null,
+    users:[
+      { id:'maria', name:'Maria Santos', role:'employee', manager:'david' },
+      { id:'ana',   name:'Ana Lim',      role:'employee', manager:'david' },
+      { id:'david', name:'David Reyes',  role:'manager',  manager:'linda' },
+      { id:'linda', name:'Linda Cruz',   role:'admin',    manager:null },
+    ],
+    leaveTypes:[
+      { id:'vacation',  name:'Vacation leave',  entitled:15, requiresDoc:false, active:true },
+      { id:'sick',      name:'Sick leave',      entitled:6,  requiresDoc:false, active:true },
+      { id:'emergency', name:'Emergency leave', entitled:3,  requiresDoc:true,  active:false },
+    ],
+    balances:{
+      maria:{ vacation:{entitled:15,used:0,pending:0}, sick:{entitled:6,used:0,pending:0} },
+      ana:  { vacation:{entitled:15,used:0,pending:0}, sick:{entitled:6,used:0,pending:0} },
+      david:{ vacation:{entitled:15,used:4,pending:0}, sick:{entitled:6,used:0,pending:0} },
+      linda:{ vacation:{entitled:15,used:1,pending:0}, sick:{entitled:6,used:0,pending:0} },
+    },
+    requests:[
+      { id:1, emp:'maria', type:'vacation', start:t(-40), end:t(-39), days:workingDays(t(-40),t(-39)), reason:'Family event out of town.', status:'approved', decidedBy:'david', decidedAt:t(-38), note:'Approved. Enjoy the time off.', submitted:t(-43) },
+      { id:2, emp:'maria', type:'sick',     start:t(-7),  end:t(-7),  days:workingDays(t(-7),t(-7)),   reason:'Fever and colds.',         status:'approved', decidedBy:'david', decidedAt:t(-6),  note:'', submitted:t(-7) },
+      { id:3, emp:'ana',   type:'vacation', start:t(-21), end:t(-19), days:workingDays(t(-21),t(-19)), reason:'Trip with friends.',       status:'rejected', decidedBy:'david', decidedAt:t(-20), note:'Peak season \u2014 the team needs coverage that week.', submitted:t(-24) },
+      { id:4, emp:'maria', type:'vacation', start:t(10),  end:t(12),  days:workingDays(t(10),t(12)),   reason:'Family trip out of town.', status:'pending', submitted:t(0) },
+      { id:5, emp:'ana',   type:'sick',     start:t(5),   end:t(5),   days:workingDays(t(5),t(5)),     reason:"Doctor's appointment.",    status:'pending', submitted:t(0) },
+    ],
+    activity:[
+      { date:t(-30), text:'Linda Cruz deactivated emergency leave.' },
+      { date:t(-20), text:'David Reyes rejected Ana Lim\u2019s vacation leave request.' },
+      { date:t(-6),  text:'David Reyes approved Maria Santos\u2019s sick leave request.' },
+      { date:t(0),   text:'Maria Santos submitted a vacation leave request.' },
+      { date:t(0),   text:'Ana Lim submitted a sick leave request.' },
+    ],
+    seq:6,
+  };
+  // derive used/pending from the seeded requests so numbers always agree
+  for(const r of state.requests){
+    const b = state.balances[r.emp][r.type];
+    if(r.status==='pending') b.pending += r.days;
+    if(r.status==='approved') b.used += r.days;
+  }
+}
+
+/* ---------- lookups ---------- */
+const userById  = id => state.users.find(u=>u.id===id);
+const typeById  = id => state.leaveTypes.find(t=>t.id===id);
+const reqById   = id => state.requests.find(r=>r.id===id);
+const me        = () => userById(state.currentUser);
+const available = (emp,type) => { const b=state.balances[emp][type]; return b.entitled - b.used - b.pending; };
+function statusLabel(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function statusSpan(s){ return '<span class="st-'+s+'">'+statusLabel(s)+'</span>'; }
+
+/* ---------- navigation ---------- */
+const NAVS = {
+  employee:[ ['dashboard','My Leave'], ['apply','Apply for Leave'], ['myRequests','My Requests'] ],
+  manager: [ ['queue','Approval Queue'], ['team','Team Requests'] ],
+  admin:   [ ['adminUsers','Users'], ['adminTypes','Leave Types'], ['adminActivity','Activity'] ],
+};
+const HOME = { employee:'dashboard', manager:'queue', admin:'adminUsers' };
+
+function renderNav(){
+  const nav = NAVS[me().role];
+  let html = '';
+  for(const [view,label] of nav){
+    let text = label;
+    if(view==='queue'){
+      const n = state.requests.filter(r=>r.status==='pending' && userById(r.emp).manager===state.currentUser).length;
+      text += ' ('+n+')';
+    }
+    html += '<a href="#" class="'+(state.view===view?'active':'')+'" onclick="go(\''+view+'\');return false">'+text+'</a>';
+  }
+  document.getElementById('nav').innerHTML = html;
+}
+
+function renderTopbar(){
+  const sel = document.getElementById('userSelect');
+  sel.innerHTML = state.users.map(u =>
+    '<option value="'+u.id+'">'+u.name+' \u2014 '+({employee:'Employee',manager:'Manager',admin:'Administrator'})[u.role]+'</option>'
+  ).join('');
+  sel.value = state.currentUser;
+}
+
+function go(view){
+  state.view = view; state.flash = null;
+  if(view!=='myRequests') state.detailId = null;
+  render();
+}
+function switchUser(id){
+  state.currentUser = id;
+  state.view = HOME[me().role];
+  state.flash = null; state.detailId = null; state.reviewId = null;
+  render();
+}
+function resetDemo(){
+  const u = state.currentUser;
+  seed();
+  state.currentUser = u;
+  state.view = HOME[me().role];
+  state.flash = 'Demo data has been reset.';
+  render();
+}
+
+/* ---------- employee views ---------- */
+function viewDashboard(){
+  const u = me();
+  const mine = state.requests.filter(r=>r.emp===u.id).sort((a,b)=> b.submitted.localeCompare(a.submitted));
+  let rows = '';
+  for(const t of state.leaveTypes.filter(t=>t.active)){
+    const b = state.balances[u.id][t.id];
+    rows += '<tr><td>'+t.name+'</td><td class="num">'+b.entitled+'</td><td class="num">'+b.used+'</td><td class="num">'+b.pending+'</td><td class="num"><strong>'+available(u.id,t.id)+'</strong></td></tr>';
+  }
+  let recent = '';
+  for(const r of mine.slice(0,3)){
+    recent += '<tr><td>'+typeById(r.type).name+'</td><td>'+fmtRange(r.start,r.end)+'</td><td class="num">'+r.days+'</td><td>'+statusSpan(r.status)+'</td></tr>';
+  }
+  return '<h1>My Leave</h1><p class="sub">Your leave balance and recent requests.</p>'
+    + '<button class="btn primary" onclick="go(\'apply\')">Apply for Leave</button>'
+    + '<h2>Balance this year (days)</h2>'
+    + '<table class="data"><thead><tr><th>Leave type</th><th class="num">Entitled</th><th class="num">Used</th><th class="num">Pending</th><th class="num">Available</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    + '<h2>Recent requests &nbsp;<button class="viewlink" onclick="go(\'myRequests\')">View all</button></h2>'
+    + '<table class="data"><thead><tr><th>Type</th><th>Dates</th><th class="num">Days</th><th>Status</th></tr></thead><tbody>'+(recent||'<tr><td colspan="4" class="muted">No requests yet.</td></tr>')+'</tbody></table>';
+}
+
+function validateRequest(includeReason){
+  const typeId = document.getElementById('f-type').value;
+  const start  = document.getElementById('f-start').value;
+  const end    = document.getElementById('f-end').value;
+  const reason = document.getElementById('f-reason').value;
+  const errs = [];
+  let days = 0;
+  if(!typeId){ errs.push('Select a leave type.'); }
+  if(!start || !end){
+    errs.push('Enter a start and end date.');
+  } else if(end < start){
+    errs.push('End date must be after the start date.');
+  } else {
+    days = workingDays(start,end);
+    if(days < 1) errs.push('The selected range has no working days.');
+    if(start < today()) errs.push('The start date is in the past.');
+    if(start.slice(0,4) !== end.slice(0,4)) errs.push('Requests cannot cross into the next year. Submit one request per year.');
+    if(typeId){
+      const avail = available(me().id, typeId);
+      if(days > avail) errs.push('This request needs '+days+' day(s) but only '+avail+' are available.');
+      const clash = state.requests.find(r => r.emp===me().id && (r.status==='pending'||r.status==='approved') && r.start<=end && start<=r.end);
+      if(clash) errs.push('These dates overlap an existing '+typeById(clash.type).name+' request ('+fmtRange(clash.start,clash.end)+').');
+    }
+  }
+  if(includeReason && !reason.trim()) errs.push('Provide a short reason for the request.');
+  return { errs, days, typeId, start, end, reason };
+}
+
+function updateApplySummary(){
+  const box = document.getElementById('applySummary');
+  const { errs, days, typeId } = validateRequest(false);
+  let html = '<h3>Request summary</h3>';
+  if(typeId && days > 0){
+    const avail = available(me().id, typeId);
+    html += '<div class="row"><span>Working days requested</span><span>'+days+'</span></div>'
+          + '<div class="row"><span>Available after submission</span><span>'+Math.max(avail-days,0)+' of '+avail+' days</span></div>';
+  } else {
+    html += '<div class="muted small">Select a leave type and dates to see the number of working days.</div>';
+  }
+  if(errs.length) html += '<ul class="errors">'+errs.map(e=>'<li>'+e+'</li>').join('')+'</ul>';
+  box.innerHTML = html;
+}
+
+function viewApply(){
+  const opts = state.leaveTypes.filter(t=>t.active).map(t=>'<option value="'+t.id+'">'+t.name+'</option>').join('');
+  const defStart = toISO(addDays(new Date(),7));
+  return '<h1>Apply for Leave</h1><p class="sub">Your request will be sent to '+userById(me().manager).name+' for review.</p>'
+    + '<div class="field"><label for="f-type">Leave type</label><select id="f-type" onchange="updateApplySummary()"><option value="">Select a leave type\u2026</option>'+opts+'</select></div>'
+    + '<div class="formrow">'
+    + '<div class="field"><label for="f-start">Start date</label><input type="date" id="f-start" value="'+defStart+'" oninput="updateApplySummary()"></div>'
+    + '<div class="field"><label for="f-end">End date</label><input type="date" id="f-end" value="'+defStart+'" oninput="updateApplySummary()"></div>'
+    + '</div>'
+    + '<div class="field"><label for="f-reason">Reason</label><textarea id="f-reason" placeholder="Short reason for the request"></textarea></div>'
+    + '<div class="box" id="applySummary"></div>'
+    + '<div class="btnrow"><button class="btn primary" onclick="submitRequest()">Submit Request</button></div>';
+}
+
+function submitRequest(){
+  const { errs, days, typeId, start, end, reason } = validateRequest(true);
+  if(errs.length){
+    document.getElementById('applySummary').innerHTML =
+      '<h3>Request summary</h3><ul class="errors">'+errs.map(e=>'<li>'+e+'</li>').join('')+'</ul>';
+    return;
+  }
+  const u = me();
+  state.requests.push({
+    id: state.seq++, emp:u.id, type:typeId, start, end, days,
+    reason: reason.trim(), status:'pending', submitted: today(),
+  });
+  state.balances[u.id][typeId].pending += days;
+  state.activity.unshift({ date: today(), text: u.name+' submitted a '+typeById(typeId).name.toLowerCase()+' request.' });
+  state.flash = 'Leave request submitted. '+userById(u.manager).name+' will review it.';
+  go('myRequests');
+}
+
+function viewMyRequests(){
+  const u = me();
+  const mine = state.requests.filter(r=>r.emp===u.id).sort((a,b)=> b.submitted.localeCompare(a.submitted) || b.id-a.id);
+  let rows = '';
+  for(const r of mine){
+    rows += '<tr class="clickable" onclick="state.detailId='+r.id+';render()"><td>'+typeById(r.type).name+'</td><td>'+fmtRange(r.start,r.end)+'</td><td class="num">'+r.days+'</td><td>'+statusSpan(r.status)+'</td><td class="num">'+(state.detailId===r.id?'<strong>Hide</strong>':'View')+'</td></tr>';
+  }
+  let detail = '';
+  if(state.detailId){
+    const r = reqById(state.detailId);
+    if(r && r.emp===u.id){
+      detail = '<div class="box"><h3>'+typeById(r.type).name+' \u2014 '+fmtRange(r.start,r.end)+'</h3>'
+        + '<div class="row"><span>Status</span><span>'+statusSpan(r.status)+'</span></div>'
+        + '<div class="row"><span>Working days</span><span>'+r.days+'</span></div>'
+        + '<div class="row"><span>Reason</span><span>'+r.reason.replace(/</g,'&lt;')+'</span></div>'
+        + '<div class="row"><span>Submitted</span><span>'+fmtDate(r.submitted)+'</span></div>';
+      if(r.status==='pending'){
+        detail += '<div class="row"><span>Decision</span><span class="muted">Waiting for '+userById(u.manager).name+'</span></div>';
+      }
+      if(r.status==='approved' || r.status==='rejected'){
+        detail += '<div class="row"><span>Decision</span><span>'+statusLabel(r.status)+' by '+userById(r.decidedBy).name+' on '+fmtDate(r.decidedAt)+'</span></div>';
+        if(r.note) detail += '<div class="quote">'+r.note.replace(/</g,'&lt;')+'</div>';
+      }
+      if(r.status==='pending'){
+        detail += '<div class="btnrow"><button class="btn danger" onclick="cancelRequest('+r.id+')">Cancel this request</button></div>';
+      }
+      detail += '</div>';
+    }
+  }
+  return '<h1>My Requests</h1><p class="sub">All leave requests you have submitted.</p>'
+    + '<table class="data"><thead><tr><th>Type</th><th>Dates</th><th class="num">Days</th><th>Status</th><th></th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="5" class="muted">No requests yet.</td></tr>') + '</tbody></table>' + detail;
+}
+
+function cancelRequest(id){
+  const r = reqById(id);
+  if(!r || r.status!=='pending') return;
+  if(!confirm('Cancel this pending request?')) return;
+  r.status = 'cancelled';
+  state.balances[r.emp][r.type].pending -= r.days;
+  state.activity.unshift({ date: today(), text: me().name+' cancelled a '+typeById(r.type).name.toLowerCase()+' request.' });
+  state.flash = 'Request cancelled. The pending days were returned to your balance.';
+  render();
+}
+
+/* ---------- manager views ---------- */
+function teamPending(){ return state.requests.filter(r=>r.status==='pending' && userById(r.emp).manager===state.currentUser); }
+
+function viewQueue(){
+  const list = teamPending().sort((a,b)=> a.submitted.localeCompare(b.submitted));
+  let rows = '';
+  for(const r of list){
+    rows += '<tr><td>'+userById(r.emp).name+'</td><td>'+typeById(r.type).name+'</td><td>'+fmtRange(r.start,r.end)+'</td><td class="num">'+r.days+'</td><td class="num"><button class="btn small" onclick="openReview('+r.id+')">Review</button></td></tr>';
+  }
+  return '<h1>Approval Queue</h1><p class="sub">Requests from your team waiting for your decision.</p>'
+    + '<table class="data"><thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="num">Days</th><th></th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="5" class="muted">Nothing is waiting for your decision.</td></tr>') + '</tbody></table>';
+}
+
+function openReview(id){ state.reviewId = id; state.view='review'; state.flash=null; render(); }
+
+function viewReview(){
+  const r = reqById(state.reviewId);
+  if(!r || r.status!=='pending') return viewQueue();
+  const emp = userById(r.emp);
+  const b = state.balances[r.emp][r.type];
+  const avail = b.entitled - b.used - b.pending;
+  return '<h1>Review Request</h1><p class="sub">Submitted by '+emp.name+' on '+fmtDate(r.submitted)+'.</p>'
+    + '<div class="box">'
+    + '<div class="row"><span>Employee</span><span>'+emp.name+'</span></div>'
+    + '<div class="row"><span>Leave type</span><span>'+typeById(r.type).name+'</span></div>'
+    + '<div class="row"><span>Dates</span><span>'+fmtRange(r.start,r.end)+'</span></div>'
+    + '<div class="row"><span>Working days</span><span>'+r.days+'</span></div>'
+    + '<div class="row"><span>'+emp.name+'\u2019s balance</span><span>'+avail+' available now \u00b7 '+(avail - r.days)+' after approval</span></div>'
+    + '<div class="row" style="align-items:flex-start"><span>Reason</span><span style="max-width:320px;text-align:right">'+r.reason.replace(/</g,'&lt;')+'</span></div>'
+    + '</div>'
+    + '<div class="field" style="max-width:520px;margin-top:18px"><label for="decNote">Note to the employee <span class="muted">(optional \u2014 required when rejecting)</span></label><textarea id="decNote"></textarea></div>'
+    + '<div id="decError" class="fielderror" style="display:none">A reason is required when rejecting a request.</div>'
+    + '<div class="btnrow"><button class="btn primary" onclick="decide('+r.id+',\'approved\')">Approve</button><button class="btn danger" onclick="decide('+r.id+',\'rejected\')">Reject</button></div>';
+}
+
+function decide(id, action){
+  const r = reqById(id);
+  if(!r || r.status!=='pending') return;
+  const noteEl = document.getElementById('decNote');
+  const note = noteEl ? noteEl.value.trim() : '';
+  if(action==='rejected' && !note){
+    document.getElementById('decError').style.display = 'block';
+    return;
+  }
+  const approver = me();
+  r.status = action; r.decidedBy = approver.id; r.decidedAt = today(); r.note = note;
+  const b = state.balances[r.emp][r.type];
+  b.pending -= r.days;
+  if(action==='approved') b.used += r.days;
+  const verb = action==='approved' ? 'approved' : 'rejected';
+  state.activity.unshift({ date: today(), text: approver.name+' '+verb+' '+userById(r.emp).name+'\u2019s '+typeById(r.type).name.toLowerCase()+' request.' });
+  state.flash = action==='approved'
+    ? 'Request approved. '+r.days+' day(s) were deducted from the employee\u2019s balance.'
+    : 'Request rejected. The pending days were returned to the employee\u2019s balance.';
+  go('queue');
+}
+
+function viewTeam(){
+  const list = state.requests.filter(r=>userById(r.emp).manager===state.currentUser)
+    .sort((a,b)=> b.submitted.localeCompare(a.submitted) || b.id-a.id);
+  let rows = '';
+  for(const r of list){
+    rows += '<tr><td>'+userById(r.emp).name+'</td><td>'+typeById(r.type).name+'</td><td>'+fmtRange(r.start,r.end)+'</td><td class="num">'+r.days+'</td><td>'+statusSpan(r.status)+'</td><td>'+(r.decidedBy?userById(r.decidedBy).name:'\u2014')+'</td></tr>';
+  }
+  return '<h1>Team Requests</h1><p class="sub">All leave requests from your direct reports.</p>'
+    + '<table class="data"><thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="num">Days</th><th>Status</th><th>Decided by</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+/* ---------- admin views ---------- */
+function viewAdminUsers(){
+  let rows = '';
+  for(const u of state.users){
+    rows += '<tr><td>'+u.name+'</td><td>'+({employee:'Employee',manager:'Manager',admin:'Administrator'})[u.role]+'</td><td>'+(u.manager?userById(u.manager).name:'\u2014')+'</td></tr>';
+  }
+  return '<h1>Users</h1><p class="sub">All accounts and reporting lines.</p>'
+    + '<table class="data"><thead><tr><th>Name</th><th>Role</th><th>Reports to</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function viewAdminTypes(){
+  let rows = '';
+  for(const t of state.leaveTypes){
+    rows += '<tr><td>'+t.name+'</td><td class="num">'+t.entitled+'</td><td>'+(t.requiresDoc?'Yes':'No')+'</td><td>'+(t.active?'<span class="st-active">Active</span>':'<span class="st-inactive">Inactive</span>')+'</td></tr>';
+  }
+  return '<h1>Leave Types</h1><p class="sub">Yearly entitlement per leave type.</p>'
+    + '<table class="data"><thead><tr><th>Leave type</th><th class="num">Yearly entitlement</th><th>Requires document</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function viewAdminActivity(){
+  const items = state.activity.slice(0,12).map(a=>'<li><span class="when">'+fmtDate(a.date)+'</span>'+a.text.replace(/</g,'&lt;')+'</li>').join('');
+  return '<h1>Activity</h1><p class="sub">Recent actions recorded by the system.</p><ul class="activity">'+items+'</ul>';
+}
+
+/* ---------- render ---------- */
+const VIEWS = {
+  dashboard: viewDashboard, apply: viewApply, myRequests: viewMyRequests,
+  queue: viewQueue, review: viewReview, team: viewTeam,
+  adminUsers: viewAdminUsers, adminTypes: viewAdminTypes, adminActivity: viewAdminActivity,
+};
+
+function render(){
+  renderTopbar();
+  renderNav();
+  const flash = state.flash ? '<div class="flash">'+state.flash.replace(/</g,'&lt;')+'</div>' : '';
+  document.getElementById('content').innerHTML = flash + VIEWS[state.view]();
+  if(state.view==='apply') updateApplySummary();
+}
+
+seed();
+render();
+</script>
+</body>
+</html>

@@ -10,11 +10,12 @@ Every decision in this document is **approved** and traceable:
 | Security controls | [#5](https://github.com/Wynteriall/leave-system/issues/5) → `research/security-measures.md` | [#9](https://github.com/Wynteriall/leave-system/issues/9) |
 | Data model | [#8](https://github.com/Wynteriall/leave-system/issues/8) → `research/data-model.md` | [#7](https://github.com/Wynteriall/leave-system/issues/7) |
 | Tech stack & architecture | [#10](https://github.com/Wynteriall/leave-system/issues/10) → `research/tech-stack.md` | [#3](https://github.com/Wynteriall/leave-system/issues/3) |
+| Professor-spec alignment (upload, reports, dashboard, admin archive, profile edit) | reference: `docs/employee_leave_application_system.md` | [#11](https://github.com/Wynteriall/leave-system/issues/11) |
 
 Domain terms are defined in [`GLOSSARY.md`](../../GLOSSARY.md) at the repo root. Hard-to-reverse
 decisions have ADRs under [`docs/adr/`](../adr/): stack (0001), year-keyed balances (0002),
 append-only history (0003), single-approval workflow (0004), in-app notifications (0005),
-day accounting (0006).
+day accounting (0006), attachment storage (0007).
 
 The research documents remain the deep-dive references; this spec is the integrated,
 decision-level view.
@@ -42,6 +43,14 @@ trust by default.
    can override/cancel (ADR-0004).
 3. **Admin-configurable leave types** with yearly entitlements; entitlements **reset yearly, no
    carry-over** (ADR-0002).
+
+**Reference alignment (approved in #11):** the professor's reference
+(`docs/employee_leave_application_system.md`) uses a two-role model in which its "Administrator"
+approves requests, manages accounts and generates reports. In this spec that role maps onto the
+**Manager** (decisions, M-01–M-06) plus the **Administrator** (configuration, override,
+reporting) — a least-privilege refinement the reference's own wording ("administrator or
+authorized office personnel") permits. The Administrator approves nothing directly; the
+exception path is override/cancel (A-07).
 
 **Out of scope:** multi-level approval, delegation, accrual plans, carry-over, payroll /
 timesheet / calendar integrations, email/SMS/push delivery, native mobile, SSO/MFA UI,
@@ -124,7 +133,7 @@ work without it; **P1** = build after P0 demos end-to-end; **P2** = explicitly d
 | E-05 | My requests list with filters + detail page | P0 |
 | E-06 | Cancel own pending request | P0 |
 | E-07 | In-app notification inbox with unread badge and mark-as-read | P0 |
-| E-08 | Account self-service: view profile and manager, change password | P0 |
+| E-08 | Account self-service: view profile and manager, change password, **edit permitted profile fields** (phone, address — non-identity only; name, email, `employee_code`, role, manager are admin-only via A-01) *(revised in #11)* | P0 |
 | E-09 | Request timeline: submitted / decided / overridden / cancelled with actor, time, note | P1 |
 | E-10 | My year calendar: own leave + public holidays | P1 |
 | E-11 | Team availability calendar (name + leave type only) | P1 |
@@ -132,7 +141,7 @@ work without it; **P1** = build after P0 demos end-to-end; **P2** = explicitly d
 | E-13 | Year-end reminder listing unused days that will expire | P1 |
 | E-14 | Duplicate an old request ("request again") | **P1 (promoted in #6)** |
 | E-15 | Export own approved leave as .ics | P2 |
-| E-16 | Supporting-document **reference field** for types flagged `requires_document` (no file upload — decision in #6) | P1 |
+| E-16 | Supporting-document **upload** for types flagged `requires_document`: PDF/JPEG/PNG (MIME + extension whitelist), ≤ 5 MB, Form Request validation; stored on a non-public disk with a random filename; download via a policy-gated route (owner / direct approver / admin), downloads logged (ADR-0007) | **P1 — professor-mandatory, ships before the graded demo (reverses the #6 reference-field decision; approved in #11)** |
 | E-17 | Draft autosave | P2 (confirmed deferred in #6) |
 
 ### 3.2 Manager module (M)
@@ -164,8 +173,9 @@ work without it; **P1** = build after P0 demos end-to-end; **P2** = explicitly d
 | A-06 | Public holiday calendar management | **Deferred** (ADR-0006: v1 holidays are an application constant; no storage to manage — the one tier adjustment caused by #7) |
 | A-07 | Override or cancel any request with mandatory reason, preserving the original decision | P0 |
 | A-08 | Audit log viewer with filters (actor, event type, subject, date range) | P0 |
-| A-09 | Admin dashboard: pending count, absent today, overdue queue, utilisation | P1 |
-| A-10 | Reports with CSV export — **one report**: balances by person, field-minimised (decision in #6) | P1 |
+| A-09 | Admin dashboard: pending count, absent today, overdue queue, utilisation, **active-employee and application counts** (counts live in the admin home early; full dashboard stays P1 — revised in #11) | P1 |
+| A-10 | Reports, **print-ready HTML** (`@media print`) with CSV export — **two report views**: balances by person and leave transactions by period/type/status, field-minimised (revised in #11) | P1 |
+| A-16 | All-requests archive: administrator can view every submitted request, filter by employee/type/status/date, and open request details and supporting documents; entry point for A-07 | P0 |
 | A-11 | Settings: reminder schedule, session timeout, password policy knobs | P1 |
 | A-12 | Session administration: terminate sessions, trigger password reset | P2 |
 | A-13 | Bulk manager reassignment | P2 |
@@ -213,7 +223,8 @@ inside the same transaction as the state change. Mechanics per ADR-0005.
 3. **M-01–M-04** — someone can decide, with context.
 4. **E-05 + E-06 + M-06** — both sides can see and correct what happened.
 5. **N-01 + N-02** — the loop closes inside the app.
-6. **A-02 + A-04 + A-05 + A-07 + A-08** — the admin can run the year and defend every decision.
+6. **A-02 + A-04 + A-05 + A-07 + A-08 + A-16 + E-16** — the admin can run the year, review every
+   request and supporting document, and defend every decision.
 7. **N-03 + N-04 + N-06** — the system chases what the humans forget.
 8. Then P1, starting with E-11/M-08 (one calendar, two views) and E-09 (free timeline).
 
@@ -270,11 +281,11 @@ threat lens (#9): the authenticated user is the adversary.
 | C-1 | Password storage: **Argon2id** (m=19 MiB, t=2, p=1) via the framework `Hash` facade; bcrypt (work factor ≥ 10) only as documented fallback (reconciles #9 "Argon2id as written" with #3's stack note — a one-line `HASH_DRIVER` switch) | A07 | Offline cracking of a leaked password DB |
 | C-2 | Password policy (length + common-password blocklist; **no character-class rules** — per #9) & anti-enumeration login (one generic error, constant-time path) | A07 | Credential guessing, user enumeration |
 | C-3 | Session management: framework server-side store; `HttpOnly; Secure; SameSite=Lax` cookie; regenerate ID on login; idle timeout (~30 min); server-side invalidation on logout | A07 | Session hijacking, fixation |
-| C-4 | Server-side allow-list input validation (type, length, range, format) before any processing | A03 | Malformed input reaching business logic |
+| C-4 | Server-side allow-list input validation (type, length, range, format) before any processing; uploaded files require MIME + extension allow-list and a 5 MB maximum | A03 | Malformed input or hostile files reaching business logic |
 | C-5 | SQL-injection defence: parameterized queries / ORM binding everywhere; least-privilege DB account | A03 | SQLi via forms/URL parameters |
 | C-6 | XSS defence: template auto-escaping on all user data (no raw output); CSP as second layer | A03 | Stored/reflected XSS |
 | C-7 | CSRF defence: framework synchronizer token on every state-changing request + `SameSite`; state changes never use GET | A01/CWE-352 | Forged cross-site requests |
-| C-8 | RBAC, deny-by-default: role check + **ownership check server-side on every request**; object access verifies the record belongs to the caller (IDOR defence) | A01 | Privilege escalation, IDOR |
+| C-8 | RBAC, deny-by-default: role check + **ownership check server-side on every request**; object access verifies the record belongs to the caller (IDOR defence), including attachment downloads | A01 | Privilege escalation, IDOR, unauthorized document access |
 | C-9 | Brute-force protection: per-account failed-login counting with backoff/lockout; per-IP limits on auth endpoints; every lockout logged | A07 | Password brute force, stuffing, spraying |
 | C-10 | Audit logging: auth successes/failures, access-denied events, approvals/overrides/cancellations, with timestamp, user, action; never log passwords or tokens | A09 | Invisible attacks |
 | C-11 | HTTPS/TLS everywhere, even locally (self-signed cert); `Secure` cookie flag; HSTS | A02 | Credential/session interception |
@@ -367,7 +378,7 @@ why debug mode is a misconfiguration risk; serve over local HTTPS with `mkcert` 
 | --- | --- | --- |
 | A01 Broken access control | `role:` middleware + policies + scoped queries | Employee A opens B's request → 403; manager approves outside their reports → 403 |
 | A02 Cryptographic failures | `Hash` facade (Argon2id), HTTPS | `users.password` shows a PHC hash, never plaintext |
-| A03 Injection | Eloquent bindings; no string-concatenated SQL | `' OR 1=1 --` in a filter → literal string, no rows leaked |
+| A03 Injection | Eloquent bindings; no string-concatenated SQL; server-side file validation | `' OR 1=1 --` in a filter → literal string, no rows leaked; renamed `.php` upload rejected |
 | A04 Insecure design | Server-side day computation, overlap check, transactional balance update | Tampered form requesting more days than remain → rejected server-side |
 | A05 Security misconfiguration | `APP_DEBUG=false`, `.env` not committed, secure headers | 500 with debug off → generic error page |
 | A07 Auth failures | Fortify throttling, session regeneration, password policy | Six failed logins → 429; session ID changes across login |
@@ -402,6 +413,7 @@ erDiagram
     USERS          |o--o{ AUDIT_LOG       : "actor of"
     USERS          ||--o{ NOTIFICATIONS   : "receives"
     LEAVE_REQUESTS |o--o{ NOTIFICATIONS   : "about"
+    LEAVE_REQUESTS ||--o{ ATTACHMENTS     : "has supporting document"
 ```
 
 ### 7.2 Tables (condensed)
@@ -409,18 +421,19 @@ erDiagram
 | Table | Purpose | Keys / notable constraints |
 | --- | --- | --- |
 | `roles` | Fixed 3-row lookup | `UNIQUE(name)`; seeded `employee`/`manager`/`administrator`; never client-trusted |
-| `users` | Everyone, one role each | `role_id` FK; **self-FK `manager_id`** (reporting line, `SET NULL`); `UNIQUE(email)`, `UNIQUE(employee_code)`; `password_hash` (Argon2id PHC string); `is_active` soft deactivation; throttle fields (`failed_login_attempts`, `locked_until`) |
+| `users` | Everyone, one role each | `role_id` FK; **self-FK `manager_id`** (reporting line, `SET NULL`); `UNIQUE(email)`, `UNIQUE(employee_code)`; permitted profile fields `phone`, `address`; `password_hash` (Argon2id PHC string); `is_active` soft deactivation; throttle fields (`failed_login_attempts`, `locked_until`) |
 | `leave_types` | Admin-configurable categories | `UNIQUE(code)`, `UNIQUE(name)`; `annual_entitlement_days DECIMAL(6,2)`; `requires_document`; `is_active` (deactivate, never delete); every change emits an `audit_log` row |
 | `leave_balances` | Entitlement per user×type×year | **`UNIQUE (user_id, leave_type_id, year)`**; snapshot `entitled_days`; `used_days`, `pending_days`; `CHECK (used_days + pending_days <= entitled_days)`; optional optimistic-lock `version`; yearly reset inserts fresh rows (ADR-0002) |
 | `leave_requests` | The central transaction | **Composite FK `(user_id, leave_type_id, balance_year)` → `leave_balances`**; `CHECK (end_date >= start_date)`; `days_requested` server-computed `DECIMAL(6,2)`; `status ENUM(pending, approved, rejected, cancelled)`; `decided_by`/`decided_at`/`decision_note`; `cancelled_by`/`cancelled_at`; indices for queue `(status, start_date)`, overlap `(start_date, end_date)`, my-requests `(user_id, status)` |
 | `approvals` | Append-only decision timeline | `leave_request_id`, `actor_id` FKs (`RESTRICT`); `action ENUM(submitted, approved, rejected, overridden, cancelled)`; `to_status`; `is_override` marks admin overrides; **no UPDATE/DELETE ever** |
 | `audit_log` | Security/config event trail | `actor_id` nullable FK (`SET NULL`); `action`, polymorphic `subject_type`/`subject_id` (intentionally no FK); `metadata JSON`; `ip_address`, `user_agent`; **append-only** |
 | `notifications` | In-app inbox | `user_id` FK (`CASCADE` — disposable); nullable `leave_request_id` FK (`SET NULL`); `type`; `channel ENUM(in_app, email)`; `read_at` NULL = unread |
+| `attachments` | Supporting document for a leave request | `leave_request_id` FK; `uploaded_by` FK; `original_name`, random `stored_path`, validated `mime`, `size`; `uploaded_at`; stored outside the public web root; policy-gated downloads (ADR-0007) |
 
 Optional support tables (implied, not required for the core demo): `calendar_exceptions`
 (**out of scope** per ADR-0006), `password_reset_tokens` (framework state). Not modelled:
-departments/teams (the reporting line answers it), a permissions table (authorization is role +
-policy in code), attachments (E-16 is a reference field).
+ departments/teams (the reporting line answers it), and a permissions table (authorization is role +
+ policy in code). Attachments are modelled above per ADR-0007.
 
 ### 7.3 Integrity rules (transaction-scoped)
 
@@ -482,14 +495,14 @@ visibility.
 
 ## 9. Screen inventory (input for the deferred wireframes)
 
-Thirteen screens cover the feature set; the first nine are the demo path. UI wireframes were
+Fourteen screens cover the feature set; the first nine are the demo path. UI wireframes were
 deliberately deferred and remain **not yet specified** — this inventory is their input.
 
 | # | Screen | Serves |
 | --- | --- | --- |
 | 1 | Login, forgot/reset password | E-01, E-08 |
 | 2 | Employee dashboard (balances, recent requests, unread notifications) | E-02, E-07 |
-| 3 | Request form with inline checks | E-03, E-04 |
+| 3 | Request form with inline checks and conditional supporting-document upload | E-03, E-04, E-16 |
 | 4 | My requests list and request detail with timeline | E-05, E-06, E-09 |
 | 5 | Team calendar (availability) | E-10, E-11, M-08 |
 | 6 | Manager approval queue | M-01, M-05 |
@@ -500,6 +513,7 @@ deliberately deferred and remain **not yet specified** — this inventory is the
 | 11 | Admin audit log | A-08 |
 | 12 | Reports and export | A-09, A-10, M-07 |
 | 13 | Settings (reminders, session, policy) | A-11, A-12, N-03 |
+| 14 | Admin all-requests archive and document review | A-16, A-07, E-16 |
 
 ---
 
@@ -512,6 +526,8 @@ deliberately deferred and remain **not yet specified** — this inventory is the
 - **Data retention** — none modelled (local dev, synthetic data).
 - **Concurrency demo** — show two simultaneous approvals of the last remaining day: one must fail
   (`FOR UPDATE` made visible). Noted for the presentation, not a build item.
+- **Attachment handling** — E-16 is no longer deferred as a reference field; secure upload and
+  policy-gated download are required before the graded demo (ADR-0007, issue #11).
 
 ## 11. Traceability
 
@@ -524,4 +540,5 @@ reference for each area:
 - §6 ← `research/tech-stack.md` (#10, approved #3; ADR-0001)
 - §7 ← `research/data-model.md` (#8, approved #7; ADR-0002, ADR-0003)
 - §8 ← #6 decision comment
-- Glossary: `GLOSSARY.md`; ADRs: `docs/adr/0001`–`0006`
+- Professor-reference alignment ← `docs/employee_leave_application_system.md` + issue #11 + ADR-0007
+- Glossary: `GLOSSARY.md`; ADRs: `docs/adr/0001`–`0007`

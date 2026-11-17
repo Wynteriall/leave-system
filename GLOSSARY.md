@@ -95,6 +95,11 @@ here; do not drift to synonyms. Decisions live in `docs/adr/`; the full specific
 - **Nudge** — an employee-initiated reminder to their approver, max once per 24 h per request.
 - **Soft deactivation** — users and leave types get `is_active` instead of deletion, preserving
   FK targets in history.
+- **Attachment** — a supporting document associated with a leave request when its leave type
+  requires one. In v1, one PDF/JPEG/PNG file up to 5 MB is stored on a non-public disk and is
+  downloadable only by the employee owner, direct approver, or Administrator.
+- **Permitted profile fields** — the employee-editable `phone` and `address` fields. Identity and
+  routing fields (`name`, `email`, `employee_code`, `role`, `manager`) remain Administrator-managed.
 
 ## Security terms
 
