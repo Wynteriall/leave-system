@@ -424,22 +424,25 @@ enforced, because MySQL CHECK constraints are row-local and cannot express cross
 
 ## 6. Risks and open points for the grilling / approval ticket
 
-1. **Working-day definition.** Half-day support and which days count (weekends, public holidays)
-   must be fixed before `days_requested` can be computed deterministically; decide whether
-   `calendar_exceptions` is in scope for the demo.
-2. **Cross-year requests.** A request spanning 31 Dec -> 2 Jan must pick one `balance_year`. The
-   schema stores it explicitly; the business rule (split the request, or charge the start year) is
-   still a policy decision.
-3. **ENUM vs lookup table.** ENUM is compact and simple for fixed vocabularies but changing a value
-   is a DDL `ALTER TABLE`; if the team expects statuses to evolve, switch `status`, `action` and
-   `channel` to 4-6 row lookup tables before build starts.
+Resolved by the approval in [#7](https://github.com/Wynteriall/leave-system/issues/7) (2026-11-17):
+
+1. **Working-day definition - RESOLVED.** `days_requested` is computed by a Mon-Fri working-day
+   calculator with a fixed holiday list as an application constant; half-day support is out of
+   scope. `calendar_exceptions` stays optional and out of scope for the demo.
+2. **Cross-year requests - RESOLVED: require splitting.** A request may never span two calendar
+   years; submit validation rejects `YEAR(start_date) <> YEAR(end_date)`. This also pins
+   `balance_year` = year of `start_date` and keeps overlap checks within a single year.
+3. **ENUM vs lookup table - RESOLVED.** Keep `ENUM` for `status`, `action` and `channel`; the
+   vocabularies are closed for this project and an `ALTER TABLE` remains available if ever needed.
+
+Standing notes (accepted as-is):
+
 4. **Concurrency proof in the demo.** Show two simultaneous approvals of the last remaining day:
    one must fail. This demonstrates why `FOR UPDATE`/transactions exist rather than being a slide-only
    claim.
 5. **Notification scope.** Keep delivery in-app; state explicitly that email/reminder transport is
    out of scope for local dev so the data model's `channel` column is not mistaken for a promise.
-6. **Data retention.** No retention/purge policy is modelled (local dev only, synthetic data);
-   flag if the course expects one.
+6. **Data retention.** No retention/purge policy is modelled (local dev only, synthetic data).
 
 ---
 
